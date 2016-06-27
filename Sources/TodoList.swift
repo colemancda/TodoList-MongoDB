@@ -46,9 +46,10 @@ public class TodoList: TodoListAPI {
     let server: Server!
 
     let collection = "todos"
-
+    
+    /*let connectionProperties = nil
     // Find database if it is already running
-    /*public init(_ dbConfiguration: DatabaseConfiguration) {
+    public init(_ dbConfiguration: DatabaseConfiguration) {
 
         connectionProperties = ConnectionProperties(host: dbConfiguration.host!,
                                                     port: Int16(dbConfiguration.port!),
@@ -93,7 +94,7 @@ public class TodoList: TodoListAPI {
             oncompletion(count, nil)
 
         } catch {
-            oncompletion(nil, Errors.couldNotRetrieveData)
+            oncompletion(nil, error)
 
         }
 
@@ -117,7 +118,7 @@ public class TodoList: TodoListAPI {
             oncompletion(count, nil)
 
         } catch {
-            oncompletion(nil, Errors.couldNotRetrieveData)
+            oncompletion(nil, error)
 
         }
     }
@@ -143,7 +144,7 @@ public class TodoList: TodoListAPI {
             oncompletion(todoItems, nil)
 
         } catch {
-            oncompletion(nil, Errors.couldNotRetrieveData)
+            oncompletion(nil, error)
 
         }
 
@@ -164,7 +165,7 @@ public class TodoList: TodoListAPI {
             oncompletion(todoItems, nil)
 
         } catch {
-            oncompletion(nil, Errors.couldNotRetrieveData)
+            oncompletion(nil, error)
 
         }
 
@@ -180,7 +181,7 @@ public class TodoList: TodoListAPI {
 
             let item = try todosCollection.findOne(matching: query)
 
-            guard let sid = item?["objectID"].string,
+            guard let sid = item?["_id"].string,
                     suid = item?["userID"].string,
                     stitle = item?["title"].string,
                     sorder = item?["order"].int,
@@ -193,7 +194,7 @@ public class TodoList: TodoListAPI {
             oncompletion(todoItem, nil)
 
         } catch {
-            oncompletion(nil, Errors.couldNotRetrieveData)
+            oncompletion(nil, error)
 
         }
 
@@ -221,7 +222,7 @@ public class TodoList: TodoListAPI {
             oncompletion(todoItem, nil)
 
         } catch {
-            oncompletion(nil, Errors.couldNotAddItem) // TODO: Put in actual errors
+            oncompletion(nil, error) // TODO: Put in actual errors
 
         }
 
@@ -230,24 +231,23 @@ public class TodoList: TodoListAPI {
     public func update(documentID: String, userID: String?, title: String?, order: Int?,
         completed: Bool?, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
 
-        //let database = server[databaseName]
-        //let todosCollection = database[collection]
-        oncompletion(nil, Errors.couldNotUpdate)
-
-        /*do {
-            let obj = try todosCollection.findOne(matching: ["ObjectID": ~documentID])
+        let database = server[databaseName]
+        let todosCollection = database[collection]
+        
+        do {
+            let obj = try todosCollection.findOne(matching: ["_id": ~documentID])
             
             if let object = obj {
-                let updatedTodo: [String: Valuetype] = [
-                                                           "type": "todo",
-                                                           "userID": userID != nil ? userID! : object["userID"].string,
-                                                           "title": title != nil ? title! : object["title"].string,
-                                                           "order": order != nil ? order! : object["order"].int,
-                                                           "completed": completed != nil ? completed! : object["completed"].bool
+                let updatedTodo: Document = [
+                                   "type": "todo",
+                                   "userID": userID != nil ? ~userID! : ~object["userID"].string,
+                                   "title": title != nil ? ~title! : ~object["title"].string,
+                                   "order": order != nil ? ~order! : ~object["order"].int,
+                                   "completed": completed != nil ? ~completed! : ~object["completed"].bool
                 ]
                 
                 do {
-                    try todosCollection.update(matching: ["objectID": ~documentID], to: updatedTodo)
+                    try todosCollection.update(matching: ["_id": ~documentID], to: updatedTodo)
                     
                     oncompletion(nil, nil) //
                     
@@ -258,9 +258,9 @@ public class TodoList: TodoListAPI {
             }
 
         } catch {
-            oncompletion(nil, Errors.objectDoesNotExist)
+            oncompletion(nil, error)
             
-        }*/
+        }
     }
 
     public func delete(withUserID: String, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
@@ -269,26 +269,12 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            try todosCollection.remove(matching: ["objectID": ~withDocumentID])
+            try todosCollection.remove(matching: ["_id": ~withDocumentID])
 
             oncompletion(nil)
 
         } catch {
-            oncompletion(Errors.objectDoesNotExist)
-
-        }
-
-    }
-
-    public func parseGetIDandRev(_ document: [Document]) throws -> [(String, String)] {
-
-        return Array(document).flatMap {
-
-            let doc = $0["doc"]
-            let id = doc["objectID"].string
-            let rev = doc["_rev"].string
-
-            return (id, rev)
+            oncompletion(error)
 
         }
 
@@ -299,7 +285,7 @@ public class TodoList: TodoListAPI {
         let todos: [TodoItem] = Array(document).flatMap {
             doc in
 
-            let id = doc["objectID"].string
+            let id = doc["_id"].string
             let userID = doc["userID"].string
             let title = doc["title"].string
             let completed = doc["completed"].bool
