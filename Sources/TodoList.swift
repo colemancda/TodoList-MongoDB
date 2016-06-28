@@ -46,7 +46,7 @@ public class TodoList: TodoListAPI {
     let server: Server!
 
     let collection = "todos"
-    
+
     /*let connectionProperties = nil
     // Find database if it is already running
     public init(_ dbConfiguration: DatabaseConfiguration) {
@@ -64,7 +64,6 @@ public class TodoList: TodoListAPI {
                 username: String? = nil, password: String? = nil) {
 
                 do {
-
                     server = try Server("mongodb://username:password@localhost:27017", automatically: true)
 
                 } catch {
@@ -85,12 +84,8 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            let items = try todosCollection.find()
+            let count = try todosCollection.count()
 
-            var count = 0
-            for _ in items {
-                count += 1
-            }
             oncompletion(count, nil)
 
         } catch {
@@ -109,12 +104,8 @@ public class TodoList: TodoListAPI {
         do {
             let query: Query = "userID" == withUserID
 
-            let items = try todosCollection.find(matching: query)
+            let count = try todosCollection.count(matching: query)
 
-            var count = 0
-            for _ in items {
-                count += 1
-            }
             oncompletion(count, nil)
 
         } catch {
@@ -124,11 +115,39 @@ public class TodoList: TodoListAPI {
     }
 
     public func clear(oncompletion: (ErrorProtocol?) -> Void) {
-        oncompletion(nil)
+
+        let database = server[databaseName]
+        let todosCollection = database[collection]
+
+        do {
+            let query: Query = "type" == "todo"
+
+            try todosCollection.remove(matching: query)
+
+            oncompletion(nil)
+
+        } catch {
+            oncompletion(nil)
+
+        }
     }
 
     public func clear(withUserID: String, oncompletion: (ErrorProtocol?) -> Void) {
-        oncompletion(nil)
+
+        let database = server[databaseName]
+        let todosCollection = database[collection]
+
+        do {
+            let query: Query = "userID" == withUserID
+
+            try todosCollection.remove(matching: query)
+
+            oncompletion(nil)
+
+        } catch {
+            oncompletion(nil)
+
+        }
     }
 
     public func get(oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void ) {
@@ -177,17 +196,21 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            let query: Query = "userID" == withUserID && "objectID" == withDocumentID
+            let id = try ObjectId(withDocumentID)
+
+            let query: Query = "userID" == ~withUserID && "_id" == ~id
 
             let item = try todosCollection.findOne(matching: query)
 
             guard let sid = item?["_id"].string,
-                    suid = item?["userID"].string,
-                    stitle = item?["title"].string,
-                    sorder = item?["order"].int,
-                    scompleted = item?["completed"].bool else {
-                        return
-                    }
+                     suid = item?["userID"].string,
+                   stitle = item?["title"].string,
+                   sorder = item?["order"].int,
+               scompleted = item?["completed"].bool else {
+
+                   oncompletion(nil, Errors.couldNotRetrieveData)
+                   return
+               }
 
             let todoItem = TodoItem(documentID: sid, userID: suid, order: sorder, title: stitle, completed: scompleted)
 
@@ -215,14 +238,14 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            let _ = try todosCollection.insert(todoItem)
+            let item = try todosCollection.insert(todoItem)
 
-            let todoItem = TodoItem(documentID: userID, userID: userID, order: order, title: title, completed: completed) //Error
+            let todoItem = TodoItem(documentID: item["_id"].string, userID: userID, order: order, title: title, completed: completed)
 
             oncompletion(todoItem, nil)
 
         } catch {
-            oncompletion(nil, error) // TODO: Put in actual errors
+            oncompletion(nil, error)
 
         }
 
@@ -233,11 +256,13 @@ public class TodoList: TodoListAPI {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
-        
+
         do {
-            let obj = try todosCollection.findOne(matching: ["_id": ~documentID])
-            
-            if let object = obj {
+            let id = try ObjectId(documentID)
+
+            let item = try todosCollection.findOne(matching: ["_id": ~id])
+
+            if let object = item {
                 let updatedTodo: Document = [
                                    "type": "todo",
                                    "userID": userID != nil ? ~userID! : ~object["userID"].string,
@@ -245,21 +270,29 @@ public class TodoList: TodoListAPI {
                                    "order": order != nil ? ~order! : ~object["order"].int,
                                    "completed": completed != nil ? ~completed! : ~object["completed"].bool
                 ]
-                
+
                 do {
-                    try todosCollection.update(matching: ["_id": ~documentID], to: updatedTodo)
-                    
-                    oncompletion(nil, nil) //
-                    
+                    let id = try ObjectId(documentID)
+
+                    try todosCollection.update(matching: ["_id": ~id], to: updatedTodo)
+
+                    let todoItem = TodoItem(documentID: documentID,
+                                                userID: updatedTodo["userID"].string,
+                                                 order: updatedTodo["order"].int,
+                                                 title: updatedTodo["title"].string,
+                                             completed: updatedTodo["completed"].bool)
+
+                    oncompletion(todoItem, nil)
+
                 } catch {
-                    oncompletion(nil, Errors.couldNotUpdate)
-                    
+                    oncompletion(nil, error)
+
                 }
             }
 
         } catch {
             oncompletion(nil, error)
-            
+
         }
     }
 
@@ -269,7 +302,9 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            try todosCollection.remove(matching: ["_id": ~withDocumentID])
+            let id = try ObjectId(withDocumentID)
+
+            try todosCollection.remove(matching: ["_id": ~id])
 
             oncompletion(nil)
 
