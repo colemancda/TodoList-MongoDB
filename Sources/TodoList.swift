@@ -78,31 +78,18 @@ public class TodoList: TodoListAPI {
 
     }
 
-    public func count(oncompletion: (Int?, ErrorProtocol?) -> Void) {
+    public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
 
         do {
-            let count = try todosCollection.count()
 
-            oncompletion(count, nil)
+            var query: Query = "userID" == "default"
 
-        } catch {
-            oncompletion(nil, error)
-
-        }
-
-
-    }
-
-    public func count(withUserID: String, oncompletion: (Int?, ErrorProtocol?) -> Void) {
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
-
-        do {
-            let query: Query = "userID" == withUserID
+            if let uid = withUserID {
+                query = "userID" == uid
+            }
 
             let count = try todosCollection.count(matching: query)
 
@@ -114,7 +101,7 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func clear(oncompletion: (ErrorProtocol?) -> Void) {
+    public func clearAll(oncompletion: (ErrorProtocol?) -> Void) {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -132,13 +119,17 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func clear(withUserID: String, oncompletion: (ErrorProtocol?) -> Void) {
+    public func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
 
         do {
-            let query: Query = "userID" == withUserID
+            var query: Query = "userID" == "default"
+
+            if let uid = withUserID {
+                query = "userID" == uid
+            }
 
             try todosCollection.remove(matching: query)
 
@@ -169,13 +160,17 @@ public class TodoList: TodoListAPI {
 
     }
 
-    public func get(withUserID: String, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
+    public func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
 
         do {
-            let query: Query = "userID" == withUserID
+            var query: Query = "userID" == "default"
+
+            if let uid = withUserID {
+                query = "userID" == uid
+            }
 
             let items = try todosCollection.find(matching: query)
 
@@ -190,7 +185,7 @@ public class TodoList: TodoListAPI {
 
     }
 
-    public func get(withUserID: String, withDocumentID: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+    public func get(withUserID: String?, withDocumentID: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -198,7 +193,12 @@ public class TodoList: TodoListAPI {
         do {
             let id = try ObjectId(withDocumentID)
 
-            let query: Query = "userID" == ~withUserID && "_id" == ~id
+
+            var query: Query = "userID" == "default"
+
+            if let uid = withUserID {
+                query = "userID" == ~uid && "_id" == ~id
+            }
 
             let item = try todosCollection.findOne(matching: query)
 
@@ -223,12 +223,17 @@ public class TodoList: TodoListAPI {
 
     }
 
-    public func add(userID: String, title: String, order: Int, completed: Bool,
+    public func add(userID: String?, title: String, order: Int, completed: Bool,
         oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+
+        var uid = "default"
+        if userID != nil {
+            uid = userID!
+        }
 
         let todoItem: Document = [
                                     "type": "todo",
-                                    "userID": ~userID,
+                                    "userID": ~uid,
                                     "title": ~title,
                                     "order": ~order,
                                     "completed": ~completed
@@ -296,7 +301,7 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func delete(withUserID: String, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
+    public func delete(withUserID: String?, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
 
         let database = server[databaseName]
         let todosCollection = database[collection]
