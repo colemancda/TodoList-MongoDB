@@ -25,6 +25,7 @@ import MongoKitten
     typealias Valuetype = AnyObject
 #endif
 
+
 enum Errors: ErrorProtocol {
     case couldNotRetrieveData
     case objectDoesNotExist
@@ -32,11 +33,12 @@ enum Errors: ErrorProtocol {
     case couldNotAddItem
     case couldNotParseData
 }
+
 /// TodoList for MongoDB
 public class TodoList: TodoListAPI {
 
     static let defaultMongoHost = "127.0.0.1"
-    static let defaultMongoPort = UInt16(5984)
+    static let defaultMongoPort = UInt16(27017)
     static let defaultDatabaseName = "todolist"
 
     let databaseName = "todolist"
@@ -47,17 +49,34 @@ public class TodoList: TodoListAPI {
 
     let collection = "todos"
 
-    /*let connectionProperties = nil
     // Find database if it is already running
     public init(_ dbConfiguration: DatabaseConfiguration) {
 
-        connectionProperties = ConnectionProperties(host: dbConfiguration.host!,
-                                                    port: Int16(dbConfiguration.port!),
-                                                    secured: true,
-                                                    username: dbConfiguration.username,
-                                                    password: dbConfiguration.password)
+        guard let host = dbConfiguration.host,
+                  port = dbConfiguration.port else {
 
-    }*/
+                      print("Host and port were not provided")
+                      exit(1)
+        }
+
+        var authorization: (username: String, password: String, against: String)? = nil
+
+        if let username = dbConfiguration.username,
+               password = dbConfiguration.password {
+                   authorization = (username: username, password: password, against: "Secured")
+               }
+
+        do {
+            server = try Server(at: host, port: port, using: authorization, automatically: true)
+
+        } catch {
+            print("MongoDB is not available on host: \(host) and port: \(port)")
+            exit(1)
+
+        }
+
+
+    }
 
     public init(database: String = TodoList.defaultDatabaseName, host: String = TodoList.defaultMongoHost,
                 port: UInt16 = TodoList.defaultMongoPort,
@@ -72,10 +91,6 @@ public class TodoList: TodoListAPI {
                     exit(1)
 
                 }
-
-                //let database = server[databaseName]
-                //let todosCollection = database[collection]
-
     }
 
     public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
