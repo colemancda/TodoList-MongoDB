@@ -18,11 +18,20 @@ import Kitura
 import Foundation
 import TodoListWeb
 
-let todos = TodoList()
+let config = Configuration.sharedInstance
+config.loadCloudFoundry()
+
+let todos: TodoList
+
+if let dbConfig = config.databaseConfiguration {
+    todos = TodoList(dbConfig)
+} else {
+    todos = TodoList()
+}
 
 let router = Router()
 
 let controller = TodoListController(backend: todos)
-
-Kitura.addHTTPServer(onPort: 8090, with: controller.router)
+print(config.port)
+Kitura.addHTTPServer(onPort: config.port, with: controller.router)
 Kitura.run()

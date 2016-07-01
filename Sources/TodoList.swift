@@ -41,13 +41,12 @@ public class TodoList: TodoListAPI {
     static let defaultMongoPort = UInt16(27017)
     static let defaultDatabaseName = "todolist"
 
-    let databaseName = "todolist"
+    let databaseName = TodoList.defaultDatabaseName
 
+    let collection = "todos"
     let designName = "tododb"
 
     let server: Server!
-
-    let collection = "todos"
 
     // Find database if it is already running
     public init(_ dbConfiguration: DatabaseConfiguration) {
