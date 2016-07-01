@@ -14,12 +14,19 @@ Quick start:
 
   Additionally, you can view the database' shell with `mongo`
 
-- Clone the TodoList mongodb repository
+- Clone the TodoList-mongodb repository
 
 
 Running:
 
-You can start your database by running `mongod` and view the database in its local shell with `mongo`
+1. You can start your database by running `mongod`
+
+2. Build the project and run it
+    ```
+    swift build
+    ./build/debug/TodoList
+    ```
+3. Open the [TodoList Client](http://www.todobackend.com/client/index.html?http://localhost:8090) and enjoy!
 
 
 Testing:
