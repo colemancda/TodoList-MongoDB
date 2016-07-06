@@ -27,6 +27,25 @@
 
  Log.logger = HeliumLogger()
 
+ extension DatabaseConfiguration {
+
+     init(withService: Service) {
+
+         if let credentials = withService.credentials {
+             self.host = credentials["uri"].stringValue
+             self.username = credentials["user"].stringValue
+             self.password = credentials["password"].stringValue
+             self.port = UInt16(credentials["port"].stringValue)!
+         } else {
+             self.host = "127.0.0.1"
+             self.username = nil
+             self.password = nil
+             self.port = UInt16(27017)
+         }
+         self.options = [String : AnyObject]()
+     }
+ }
+ 
  let databaseConfiguration: DatabaseConfiguration
  let todos: TodoList
 
