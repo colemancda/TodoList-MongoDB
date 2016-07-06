@@ -14,24 +14,40 @@
  * limitations under the License.
  **/
 
-import Kitura
-import Foundation
-import TodoListWeb
+ import Foundation
 
-let config = Configuration.sharedInstance
-config.loadCloudFoundry()
+ import Kitura
+ import HeliumLogger
+ import LoggerAPI
+ import TodoListWeb
+ import CloudFoundryEnv
+ import TodoListAPI
+ import TodoListWeb
 
-let todos: TodoList
 
-if let dbConfig = config.databaseConfiguration {
-    todos = TodoList(dbConfig)
-} else {
-    todos = TodoList()
-}
+ Log.logger = HeliumLogger()
 
-let router = Router()
+ let databaseConfiguration: DatabaseConfiguration
+ let todos: TodoList
 
-let controller = TodoListController(backend: todos)
-print(config.port)
-Kitura.addHTTPServer(onPort: config.port, with: controller.router)
-Kitura.run()
+ do {
+     if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-MongoDB") {
+         Log.verbose("Found TodoList-MongoDB on CloudFoundry")
+         databaseConfiguration = DatabaseConfiguration(withService: service)
+         Log.verbose("databaseConfiguration: \(databaseConfiguration.host), \(databaseConfiguration.port)")
+         todos = TodoList(databaseConfiguration)
+     } else {
+         todos = TodoList()
+     }
+
+     let controller = TodoListController(backend: todos)
+
+     let port = try CloudFoundryEnv.getAppEnv().port
+     Log.verbose("Assigned port is \(port)")
+
+     Kitura.addHTTPServer(onPort: port, with: controller.router)
+     Kitura.run()
+
+ } catch CloudFoundryEnvError.InvalidValue {
+     Log.error("Oops... something went wrong. Server did not start!")
+ }

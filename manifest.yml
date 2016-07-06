@@ -1,0 +1,12 @@
+declared-services:
+  TodoList-MongoDB:
+    name: TodoList-MongoDB
+    label: user-provided
+applications:
+- name: todolist-mongodb
+  memory: 256M
+  instances: 2
+  random-route: true
+  services:
+  - TodoList-MongoDB
+  buildpack: https://github.com/IBM-Swift/swift-buildpack.git#develop

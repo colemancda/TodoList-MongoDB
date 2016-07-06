@@ -62,7 +62,7 @@ public class TodoList: TodoListAPI {
 
         if let username = dbConfiguration.username,
                password = dbConfiguration.password {
-                   authorization = (username: username, password: password, against: "Secured")
+                   authorization = (username: username, password: password, against: "admin")
                }
 
         do {
@@ -73,24 +73,22 @@ public class TodoList: TodoListAPI {
             exit(1)
 
         }
-
-
     }
 
     public init(database: String = TodoList.defaultDatabaseName, host: String = TodoList.defaultMongoHost,
-                port: UInt16 = TodoList.defaultMongoPort,
-                username: String? = nil, password: String? = nil) {
+                 port: UInt16 = TodoList.defaultMongoPort,
+                 username: String? = nil, password: String? = nil) {
 
-                do {
-                    server = try Server("mongodb://username:password@localhost:27017", automatically: true)
+                 do {
+                     server = try Server("mongodb://username:password@localhost:27017", automatically: true)
 
-                } catch {
+                 } catch {
 
-                    print("MongoDB is not available on the given host and port")
-                    exit(1)
+                     print("MongoDB is not available on the given host and port")
+                     exit(1)
 
-                }
-    }
+                 }
+     }
 
     public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
 
@@ -99,11 +97,7 @@ public class TodoList: TodoListAPI {
 
         do {
 
-            var query: Query = "userID" == "default"
-
-            if let uid = withUserID {
-                query = "userID" == uid
-            }
+            let query: Query = "userID" == withUserID ?? "default"
 
             let count = try todosCollection.count(matching: query)
 
@@ -139,11 +133,7 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            var query: Query = "userID" == "default"
-
-            if let uid = withUserID {
-                query = "userID" == uid
-            }
+            let query: Query = "userID" == withUserID ?? "default"
 
             try todosCollection.remove(matching: query)
 
@@ -180,11 +170,7 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-            var query: Query = "userID" == "default"
-
-            if let uid = withUserID {
-                query = "userID" == uid
-            }
+            let query: Query = "userID" == withUserID ?? "default"
 
             let items = try todosCollection.find(matching: query)
 
@@ -206,7 +192,6 @@ public class TodoList: TodoListAPI {
 
         do {
             let id = try ObjectId(withDocumentID)
-
 
             var query: Query = "userID" == "default"
 
@@ -240,10 +225,7 @@ public class TodoList: TodoListAPI {
     public func add(userID: String?, title: String, order: Int, completed: Bool,
         oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
 
-        var uid = "default"
-        if userID != nil {
-            uid = userID!
-        }
+        let uid = userID! ?? "default"
 
         let todoItem: Document = [
                                     "type": "todo",

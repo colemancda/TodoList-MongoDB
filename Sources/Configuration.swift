@@ -22,83 +22,32 @@ import LoggerAPI
 
 import TodoListAPI
 
-public final class Configuration {
+extension DatabaseConfiguration {
 
-    let firstPathSegment = "api/todos"
+    init(withService: Service) {
 
-    static let RedisServiceName = "*Redis*"
-    static let CloudantServiceName = "TodoList-Cloudant"
-
-    static let DefaultWebHost = "localhost"
-    static let DefaultWebPort = 8090
-
-    var url: String = Configuration.DefaultWebHost
-    var port: Int = Configuration.DefaultWebPort
-
-    var databaseConfiguration: DatabaseConfiguration?
-
-    static var sharedInstance = Configuration()
-
-    private init() {
-
-    }
-
-    public func loadCloudFoundry() {
-        do {
-            try loadWebConfig()
-            // try loadRedisConfig()
-            try loadCloudantConfig()
-        } catch _ {
-            Log.error("Could not retrieve CF environment.")
-        }
-
-    }
-
-    private func loadWebConfig() throws {
-        let appEnv = try CloudFoundryEnv.getAppEnv()
-        port = appEnv.port
-        url = appEnv.url
-    }
-
-    private func loadRedisConfig() throws {
-        if let redisService = try CloudFoundryEnv.getAppEnv().getService(spec:
-            Configuration.RedisServiceName) {
-
-            Log.info("Found Redis service named \(redisService.name)")
-
-            if let credentials = redisService.credentials {
-                let host = credentials["public_hostname"].stringValue
-                let port = UInt16(credentials["username"].stringValue)!
-                let password = credentials["password"].stringValue
-
-                databaseConfiguration = DatabaseConfiguration(host: host, port: port,
-                                                              username: nil, password: password)
-            }
-
+        if let credentials = withService.credentials {
+            self.host = credentials["uri"].stringValue
+            self.username = credentials["username"].stringValue
+            self.password = credentials["password"].stringValue
+            self.port = UInt16(credentials["port"].stringValue)!
         } else {
-            Log.info("Could not find Bluemix Redis service.")
+            self.host = "127.0.0.1"
+            self.username = nil
+            self.password = nil
+            self.port = UInt16(27017)
         }
+        self.options = [String : AnyObject]()
     }
+}
 
-    private func loadCloudantConfig() throws {
-        if let service = try CloudFoundryEnv.getAppEnv().getService(spec:
-            Configuration.CloudantServiceName) {
+public func loadMongoService() {
+    do {
+        let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList MongoDB")
+        Log.verbose("Found TodoList-MongoDB on CloudFoundry")
+        print(service)
+    }
+    catch {
 
-            Log.info("Found Cloudant service named \(service.name)")
-
-            if let credentials = service.credentials {
-                let host = credentials["host"].stringValue
-                let username = credentials["username"].stringValue
-                let password = credentials["password"].stringValue
-                let port = UInt16(credentials["port"].stringValue)!
-
-                databaseConfiguration = DatabaseConfiguration(host: host, port: port,
-                                                              username: username, password: password )
-            }
-
-        } else {
-            Log.info("Could not find Bluemix Cloudant service")
         }
-
-    }
 }
