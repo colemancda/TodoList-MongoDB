@@ -17,6 +17,7 @@
 import Foundation
 import TodoListAPI
 import MongoKitten
+import LoggerAPI
 
 
 #if os(Linux)
@@ -26,25 +27,17 @@ import MongoKitten
 #endif
 
 
-enum Errors: ErrorProtocol {
-    case couldNotRetrieveData
-    case objectDoesNotExist
-    case couldNotUpdate
-    case couldNotAddItem
-    case couldNotParseData
-}
-
-/// TodoList for MongoDB
 public class TodoList: TodoListAPI {
 
     static let defaultMongoHost = "127.0.0.1"
     static let defaultMongoPort = UInt16(27017)
     static let defaultDatabaseName = "todolist"
+    static let defaultUsername = "username"
+    static let defaultPassword = "password"
 
     let databaseName = TodoList.defaultDatabaseName
 
     let collection = "todos"
-    let designName = "tododb"
 
     let server: Server!
 
@@ -54,8 +47,8 @@ public class TodoList: TodoListAPI {
         guard let host = dbConfiguration.host,
                   port = dbConfiguration.port else {
 
-                      print("Host and port were not provided")
-                      exit(1)
+                    Log.info("Host and port were not provided")
+                    exit(1)
         }
 
         var authorization: (username: String, password: String, against: String)? = nil
@@ -69,7 +62,7 @@ public class TodoList: TodoListAPI {
             server = try Server(at: host, port: port, using: authorization, automatically: true)
 
         } catch {
-            print("MongoDB is not available on host: \(host) and port: \(port)")
+            Log.info("MongoDB is not available on host: \(host) and port: \(port)")
             exit(1)
 
         }
@@ -77,14 +70,13 @@ public class TodoList: TodoListAPI {
 
     public init(database: String = TodoList.defaultDatabaseName, host: String = TodoList.defaultMongoHost,
                  port: UInt16 = TodoList.defaultMongoPort,
-                 username: String? = nil, password: String? = nil) {
+                 username: String? = defaultUsername, password: String? = defaultPassword) {
 
                  do {
-                     server = try Server("mongodb://username:password@localhost:27017", automatically: true)
+                     server = try Server("mongodb://\(username!):\(password!)@\(host):\(port)", automatically: true)
 
                  } catch {
-
-                     print("MongoDB is not available on the given host and port")
+                     Log.info("MongoDB is not available on the given host: \(host) and port: \(port)")
                      exit(1)
 
                  }
@@ -96,7 +88,6 @@ public class TodoList: TodoListAPI {
         let todosCollection = database[collection]
 
         do {
-
             let query: Query = "userID" == withUserID ?? "default"
 
             let count = try todosCollection.count(matching: query)
@@ -122,7 +113,7 @@ public class TodoList: TodoListAPI {
             oncompletion(nil)
 
         } catch {
-            oncompletion(nil)
+            oncompletion(error)
 
         }
     }
@@ -140,7 +131,7 @@ public class TodoList: TodoListAPI {
             oncompletion(nil)
 
         } catch {
-            oncompletion(nil)
+            oncompletion(error)
 
         }
     }
@@ -193,11 +184,8 @@ public class TodoList: TodoListAPI {
         do {
             let id = try ObjectId(withDocumentID)
 
-            var query: Query = "userID" == "default"
-
-            if let uid = withUserID {
-                query = "userID" == ~uid && "_id" == ~id
-            }
+            let query: Query = withUserID != nil ? "userID" == ~withUserID! && "_id" == ~id :
+                                                   "userID" == "default" && "_id" == ~id
 
             let item = try todosCollection.findOne(matching: query)
 
@@ -207,7 +195,7 @@ public class TodoList: TodoListAPI {
                    sorder = item?["order"].int,
                scompleted = item?["completed"].bool else {
 
-                   oncompletion(nil, Errors.couldNotRetrieveData)
+                   oncompletion(nil, TodoCollectionError.ParseError)
                    return
                }
 
@@ -261,36 +249,40 @@ public class TodoList: TodoListAPI {
         do {
             let id = try ObjectId(documentID)
 
-            let item = try todosCollection.findOne(matching: ["_id": ~id])
+            let uid = userID! ?? "default"
 
-            if let object = item {
-                let updatedTodo: Document = [
-                                   "type": "todo",
-                                   "userID": userID != nil ? ~userID! : ~object["userID"].string,
-                                   "title": title != nil ? ~title! : ~object["title"].string,
-                                   "order": order != nil ? ~order! : ~object["order"].int,
-                                   "completed": completed != nil ? ~completed! : ~object["completed"].bool
-                ]
+            let item = try todosCollection.findOne(matching: ["_id": ~id, "userID": ~uid])
 
-                do {
-                    let id = try ObjectId(documentID)
-
-                    try todosCollection.update(matching: ["_id": ~id], to: updatedTodo)
-
-                    let todoItem = TodoItem(documentID: documentID,
-                                                userID: updatedTodo["userID"].string,
-                                                 order: updatedTodo["order"].int,
-                                                 title: updatedTodo["title"].string,
-                                             completed: updatedTodo["completed"].bool)
-
-                    oncompletion(todoItem, nil)
-
-                } catch {
-                    oncompletion(nil, error)
-
-                }
+            guard let object = item else {
+                oncompletion(nil, TodoCollectionError.ParseError)
+                return
             }
 
+            let updatedTodo: Document = [
+                               "type": "todo",
+                               "userID": userID != nil ? ~userID! : ~object["userID"].string,
+                               "title": title != nil ? ~title! : ~object["title"].string,
+                               "order": order != nil ? ~order! : ~object["order"].int,
+                               "completed": completed != nil ? ~completed! : ~object["completed"].bool
+            ]
+
+            do {
+                let id = try ObjectId(documentID)
+
+                try todosCollection.update(matching: ["_id": ~id], to: updatedTodo)
+
+                let todoItem = TodoItem(documentID: documentID,
+                                            userID: updatedTodo["userID"].string,
+                                             order: updatedTodo["order"].int,
+                                             title: updatedTodo["title"].string,
+                                         completed: updatedTodo["completed"].bool)
+
+                oncompletion(todoItem, nil)
+
+            } catch {
+                oncompletion(nil, error)
+
+            }
         } catch {
             oncompletion(nil, error)
 
@@ -305,7 +297,9 @@ public class TodoList: TodoListAPI {
         do {
             let id = try ObjectId(withDocumentID)
 
-            try todosCollection.remove(matching: ["_id": ~id])
+            let uid = withUserID! ?? "default"
+
+            try todosCollection.remove(matching: ["_id": ~id, "userID": ~uid])
 
             oncompletion(nil)
 
