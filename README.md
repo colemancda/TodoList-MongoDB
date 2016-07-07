@@ -75,7 +75,7 @@ Now, you can access your Mongo Database with the given host and port or connect 
 
 5. Upon creation, you should see your unbound service on the dashboard page
 
-    <center><img src="images/bluemix_service.png" width="250"></center>
+    <center><img src="Images/bluemix_service.png" width="250"></center>
 
     #### Next Steps: Push to Bluemix
 
