@@ -1,1 +1,1 @@
-web: todolist-mongodb
+web: TodoList

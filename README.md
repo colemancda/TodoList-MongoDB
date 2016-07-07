@@ -2,7 +2,7 @@
 
 Todolist implemented for Cloudant (MongoDB) backend
 
-![Build Status](https://travis-ci.org/IBM-Swift/todolist-mongodb.svg?branch=master
+![Build Status](https://travis-ci.org/IBM-Swift/todolist-mongodb.svg?branch=master)
 
 ### Initial Setup:
 
@@ -37,23 +37,23 @@ Todolist implemented for Cloudant (MongoDB) backend
 
 2. Navigate to deployment section on the side bar. Select MongoDB and set your deployment name, location, and disable SSL access
 
-    ![MongoDB by Compose](./images/mongodb_deployment.png)
+    ![MongoDB by Compose](images/mongodb_deployment.png)
 
 3. Create Deployment and you should see a field for your connection info.
 
-    ![MongoDB by Compose](./images/mongodb_connection_info.png)
+    ![MongoDB by Compose](images/mongodb_connection_info.png)
 
 4. Setup a new database called `todolist`
 
 5. Setup a collection with `todolist` called `todos`
 
-    ![MongoDB by Compose](./images/mongodb_collection_setup.png)
+    ![MongoDB by Compose](images/mongodb_collection_setup.png)
 
 5. Add a new user to the `todolist` database
 
-    ![MongoDB by Compose](./images/mongodb_collect_user_setup.png)
+    ![MongoDB by Compose](images/mongodb_collect_user_setup.png)
 
-    ![MongoDB by Compose](./images/mongodb_collection_user_setup_2.png)
+    ![MongoDB by Compose](images/mongodb_collection_user_setup_2.png)
 
 Now, you can access your Mongo Database with the given host and port or connect it to bluemix
 
@@ -67,15 +67,15 @@ Now, you can access your Mongo Database with the given host and port or connect 
 
 3. Select the MongoDB by Compose Service
 
-    ![MongoDB by Compose](./images/bluemix_mongodb_initial_setup.png)
+    ![MongoDB by Compose](images/bluemix_mongodb_initial_setup.png)
 
 4. Set the Service name as `TodoList-MongoDB` then initialize the Host, Port, Username, and Password to the values instantiated in the above section
 
-    ![MongoDB by Compose](./images/bluemix_mongodb.png)
+    ![MongoDB by Compose](images/bluemix_mongodb.png)
 
 5. Upon creation, you should see your unbound service on the dashboard page
 
-    <center><img src="./images/bluemix_service.png" width="250"></center>
+    <center><img src="images/bluemix_service.png" width="250"></center>
 
     #### Next Steps: Push to Bluemix
 

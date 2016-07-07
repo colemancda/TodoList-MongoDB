@@ -1,7 +1,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "todolist-mongodb",
+    name: "TodoList",
     dependencies: [
         .Package(url: "https://github.com/IBM-Swift/todolist-web.git", majorVersion: 0, minor: 0),
         .Package(url: "https://github.com/PlanTeam/MongoKitten.git", majorVersion: 1, minor: 1),
