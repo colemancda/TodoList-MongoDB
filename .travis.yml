@@ -22,7 +22,7 @@ before_install:
   - git clone https://github.com/IBM-Swift/todolist-tests
   - mv todolist-tests Tests
   - git submodule init && git submodule update
-  - mkdir -p /data/db
+  - sudo mkdir -p /data/db
   - sudo mongod
 
 script:
