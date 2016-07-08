@@ -45,15 +45,13 @@
          self.options = [String : AnyObject]()
      }
  }
- 
+
  let databaseConfiguration: DatabaseConfiguration
  let todos: TodoList
 
  do {
      if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-MongoDB") {
-         Log.verbose("Found TodoList-MongoDB on CloudFoundry")
          databaseConfiguration = DatabaseConfiguration(withService: service)
-         Log.verbose("databaseConfiguration: \(databaseConfiguration.host), \(databaseConfiguration.port)")
          todos = TodoList(databaseConfiguration)
      } else {
          todos = TodoList()
@@ -62,7 +60,6 @@
      let controller = TodoListController(backend: todos)
 
      let port = try CloudFoundryEnv.getAppEnv().port
-     Log.verbose("Assigned port is \(port)")
 
      Kitura.addHTTPServer(onPort: port, with: controller.router)
      Kitura.run()
