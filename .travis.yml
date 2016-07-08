@@ -24,6 +24,7 @@ before_install:
   - sudo mkdir -p /data/db
   - sudo mkdir -p ~/log
   - sudo mongod --fork --logpath ~/log/mongodb.log
+  - sleep 15
 
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then swift build ; fi
