@@ -3,7 +3,7 @@
 Todolist implemented for Cloudant (MongoDB) backend
 
 [![Build Status](https://travis-ci.org/IBM-Swift/todolist-mongodb.svg?branch=master)](https://travis-ci.org/IBM-Swift/todolist-mongodb)
-
+[![Swift 3 6-06](https://img.shields.io/badge/Swift%203-6/20 SNAPSHOT-blue.svg)](https://swift.org/download/#snapshots)
 ### Initial Setup:
 
 - Download the [Swift DEVELOPMENT 06-06 snapshot](https://swift.org/download/#snapshots)
