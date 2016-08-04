@@ -59,7 +59,7 @@ public class TodoList: TodoListAPI {
                }
 
         do {
-            server = try Server(at: host, port: port, using: authorization, automatically: true)
+            server = try Server(at: host, port: port, using: authorization, automatically: false)
 
         } catch {
             Log.info("MongoDB is not available on host: \(host) and port: \(port)")
@@ -73,7 +73,7 @@ public class TodoList: TodoListAPI {
                  username: String? = defaultUsername, password: String? = defaultPassword) {
 
                  do {
-                     server = try Server("mongodb://\(username!):\(password!)@\(host):\(port)", automatically: true)
+                     server = try Server("mongodb://\(username!):\(password!)@\(host):\(port)", automatically: false)
 
                  } catch {
                      Log.info("MongoDB is not available on the given host: \(host) and port: \(port)")
@@ -83,6 +83,14 @@ public class TodoList: TodoListAPI {
      }
 
     public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
+        
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(nil, error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -101,6 +109,14 @@ public class TodoList: TodoListAPI {
     }
 
     public func clearAll(oncompletion: (ErrorProtocol?) -> Void) {
+        
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -119,6 +135,14 @@ public class TodoList: TodoListAPI {
     }
 
     public func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
+        
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -138,6 +162,14 @@ public class TodoList: TodoListAPI {
 
     public func get(oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void ) {
 
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(nil, error)
+            }
+        }
+
         let database = server[databaseName]
         let todosCollection = database[collection]
 
@@ -156,6 +188,14 @@ public class TodoList: TodoListAPI {
     }
 
     public func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
+
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(nil, error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -177,6 +217,14 @@ public class TodoList: TodoListAPI {
     }
 
     public func get(withUserID: String?, withDocumentID: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(nil, error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -223,6 +271,14 @@ public class TodoList: TodoListAPI {
                                     "completed": ~completed
         ]
 
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(nil, error)
+            }
+        }
+
         let database = server[databaseName]
         let todosCollection = database[collection]
 
@@ -242,6 +298,14 @@ public class TodoList: TodoListAPI {
 
     public func update(documentID: String, userID: String?, title: String?, order: Int?,
         completed: Bool?, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(nil, error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
@@ -290,6 +354,14 @@ public class TodoList: TodoListAPI {
     }
 
     public func delete(withUserID: String?, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
+
+        if !server.isConnected {
+            do {
+                try server.connect()
+            } catch {
+                oncompletion(error)
+            }
+        }
 
         let database = server[databaseName]
         let todosCollection = database[collection]
