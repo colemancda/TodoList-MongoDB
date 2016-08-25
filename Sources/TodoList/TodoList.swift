@@ -45,7 +45,7 @@ public class TodoList: TodoListAPI {
     public init(_ dbConfiguration: DatabaseConfiguration) {
 
         guard let host = dbConfiguration.host,
-                  port = dbConfiguration.port else {
+              let port = dbConfiguration.port else {
 
                     Log.info("Host and port were not provided")
                     exit(1)
@@ -54,7 +54,7 @@ public class TodoList: TodoListAPI {
         var authorization: (username: String, password: String, against: String)? = nil
 
         if let username = dbConfiguration.username,
-               password = dbConfiguration.password {
+           let password = dbConfiguration.password {
                    authorization = (username: username, password: password, against: "admin")
                }
 
@@ -70,10 +70,10 @@ public class TodoList: TodoListAPI {
 
     public init(database: String = TodoList.defaultDatabaseName, host: String = TodoList.defaultMongoHost,
                  port: UInt16 = TodoList.defaultMongoPort,
-                 username: String? = defaultUsername, password: String? = defaultPassword) {
+                 username: String = defaultUsername, password: String = defaultPassword) {
 
                  do {
-                     server = try Server("mongodb://\(username!):\(password!)@\(host):\(port)", automatically: false)
+                     server = try Server("mongodb://\(username):\(password)@\(host):\(port)", automatically: false)
 
                  } catch {
                      Log.info("MongoDB is not available on the given host: \(host) and port: \(port)")
@@ -82,20 +82,14 @@ public class TodoList: TodoListAPI {
                  }
      }
 
-    public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
+    public func count(withUserID: String?, oncompletion: (Int?, Error?) -> Void) {
         
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(nil, error)
-            }
-        }
-
         let database = server[databaseName]
         let todosCollection = database[collection]
 
         do {
+            if !server.isConnected { try server.connect() }
+
             let query: Query = "userID" == withUserID ?? "default"
 
             let count = try todosCollection.count(matching: query)
@@ -108,20 +102,14 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func clearAll(oncompletion: (ErrorProtocol?) -> Void) {
-        
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+    public func clearAll(oncompletion: (Error?) -> Void) {
 
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let query: Query = "type" == "todo"
 
             try todosCollection.remove(matching: query)
@@ -134,20 +122,14 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
-        
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+    public func clear(withUserID: String?, oncompletion: (Error?) -> Void) {
 
         do {
+            if !server.isConnected { try server.connect() }
+
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let query: Query = "userID" == withUserID ?? "default"
 
             try todosCollection.remove(matching: query)
@@ -160,20 +142,14 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func get(oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void ) {
-
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(nil, error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+    public func get(oncompletion: ([TodoItem]?, Error?) -> Void ) {
 
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let items = try todosCollection.find()
 
             let todoItems = try parseTodoItemList(items)
@@ -187,20 +163,14 @@ public class TodoList: TodoListAPI {
 
     }
 
-    public func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
-
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(nil, error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+    public func get(withUserID: String?, oncompletion: ([TodoItem]?, Error?) -> Void) {
 
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let query: Query = "userID" == withUserID ?? "default"
 
             let items = try todosCollection.find(matching: query)
@@ -216,20 +186,14 @@ public class TodoList: TodoListAPI {
 
     }
 
-    public func get(withUserID: String?, withDocumentID: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
-
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(nil, error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+    public func get(withUserID: String?, withDocumentID: String, oncompletion: (TodoItem?, Error?) -> Void ) {
 
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let id = try ObjectId(withDocumentID)
 
             let query: Query = withUserID != nil ? "userID" == ~withUserID! && "_id" == ~id :
@@ -238,10 +202,10 @@ public class TodoList: TodoListAPI {
             let item = try todosCollection.findOne(matching: query)
 
             guard let sid = item?["_id"].string,
-                     suid = item?["userID"].string,
-                   stitle = item?["title"].string,
-                   sorder = item?["order"].int,
-               scompleted = item?["completed"].bool else {
+                  let suid = item?["userID"].string,
+                  let stitle = item?["title"].string,
+                  let sorder = item?["order"].int,
+                  let scompleted = item?["completed"].bool else {
 
                    oncompletion(nil, TodoCollectionError.ParseError)
                    return
@@ -259,9 +223,9 @@ public class TodoList: TodoListAPI {
     }
 
     public func add(userID: String?, title: String, order: Int, completed: Bool,
-        oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+        oncompletion: (TodoItem?, Error?) -> Void ) {
 
-        let uid = userID! ?? "default"
+        let uid = userID ?? "default"
 
         let todoItem: Document = [
                                     "type": "todo",
@@ -271,18 +235,12 @@ public class TodoList: TodoListAPI {
                                     "completed": ~completed
         ]
 
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(nil, error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
-
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let item = try todosCollection.insert(todoItem)
 
             let todoItem = TodoItem(documentID: item["_id"].string, userID: userID, order: order, title: title, completed: completed)
@@ -297,23 +255,17 @@ public class TodoList: TodoListAPI {
     }
 
     public func update(documentID: String, userID: String?, title: String?, order: Int?,
-        completed: Bool?, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
-
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(nil, error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+        completed: Bool?, oncompletion: (TodoItem?, Error?) -> Void ) {
 
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let id = try ObjectId(documentID)
 
-            let uid = userID! ?? "default"
+            let uid = userID ?? "default"
 
             let item = try todosCollection.findOne(matching: ["_id": ~id, "userID": ~uid])
 
@@ -321,55 +273,43 @@ public class TodoList: TodoListAPI {
                 oncompletion(nil, TodoCollectionError.ParseError)
                 return
             }
-
+            
             let updatedTodo: Document = [
                                "type": "todo",
                                "userID": userID != nil ? ~userID! : ~object["userID"].string,
                                "title": title != nil ? ~title! : ~object["title"].string,
-                               "order": order != nil ? ~order! : ~object["order"].int,
+                               "order": order != nil ? ~order! : ~Int(object["order"].string)!,
                                "completed": completed != nil ? ~completed! : ~object["completed"].bool
             ]
 
-            do {
-                let id = try ObjectId(documentID)
+            try todosCollection.update(matching: ["_id": ~id], to: updatedTodo)
 
-                try todosCollection.update(matching: ["_id": ~id], to: updatedTodo)
+            let todoItem = TodoItem(documentID: documentID,
+                                        userID: updatedTodo["userID"].string,
+                                         order: updatedTodo["order"].int,
+                                         title: updatedTodo["title"].string,
+                                     completed: updatedTodo["completed"].bool)
 
-                let todoItem = TodoItem(documentID: documentID,
-                                            userID: updatedTodo["userID"].string,
-                                             order: updatedTodo["order"].int,
-                                             title: updatedTodo["title"].string,
-                                         completed: updatedTodo["completed"].bool)
+            oncompletion(todoItem, nil)
 
-                oncompletion(todoItem, nil)
 
-            } catch {
-                oncompletion(nil, error)
-
-            }
         } catch {
             oncompletion(nil, error)
 
         }
     }
 
-    public func delete(withUserID: String?, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
-
-        if !server.isConnected {
-            do {
-                try server.connect()
-            } catch {
-                oncompletion(error)
-            }
-        }
-
-        let database = server[databaseName]
-        let todosCollection = database[collection]
+    public func delete(withUserID: String?, withDocumentID: String, oncompletion: (Error?) -> Void) {
 
         do {
+            if !server.isConnected { try server.connect() }
+            
+            let database = server[databaseName]
+            let todosCollection = database[collection]
+
             let id = try ObjectId(withDocumentID)
 
-            let uid = withUserID! ?? "default"
+            let uid = withUserID ?? "default"
 
             try todosCollection.remove(matching: ["_id": ~id, "userID": ~uid])
 
