@@ -1,21 +1,32 @@
 # Todolist MongoDB
 
-Todolist implemented for Cloudant (MongoDB) backend
+Todolist implemented for MongoDB backend
 
 [![Build Status](https://travis-ci.org/IBM-Swift/TodoList-MongoDB.svg?branch=master)](https://travis-ci.org/IBM-Swift/TodoList-MongoDB)
-[![Swift 3 6-06](https://img.shields.io/badge/Swift%203-6/20 SNAPSHOT-blue.svg)](https://swift.org/download/#snapshots)
+[![Swift](https://img.shields.io/badge/Swift-3.0-orange.svg)](https://swift.org/download/#snapshots)
 ### Initial Setup:
 
-- Download the [Swift DEVELOPMENT 06-06 snapshot](https://swift.org/download/#snapshots)
+- Download XCode 8 on macOS or the latest linux [Swift 3.0 Release](https://swift.org/download/#releases)
 
 - Download MongoDB
-
-  You can use `brew install mongodb` If you are using mongodb for the first time create the directory to which the mongod process will write data
-  `mkdir -p /data/db`
+  
+  - macOS
+  ```
+    $ brew install mongodb
+    ```
+  - linux
+  ```
+    $ sude apt-get mongodb
+    ```
+  If you are using mongodb for the first time, create the directory to which the mongod process will write data
+  ```
+  mkdir -p /data/db
+  mkdir -p ~/log
+  ```
 
   More information can be found [here](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/)
 
-  Additionally, you can view the database' shell with `mongo`
+  Additionally, you can view the database' shell with `$ mongo`
 
 - Clone the TodoList-mongodb repository
 
@@ -25,9 +36,15 @@ Todolist implemented for Cloudant (MongoDB) backend
 1. You can start your database by running `mongod`
 
 2. Build the project and run it
-    ```
+    - macOS
+  ```
     swift build
-    ./build/debug/todolist-mongodb
+    ./build/debug/TodoList
+    ```
+  - linux
+  ```
+    swift build -Xcc -fblocks -Xlinker -rpath -Xlinker .build/debug 
+    ./build/debug/TodoList
     ```
 3. Open the [TodoList Client](http://www.todobackend.com/client/index.html?http://localhost:8090) and enjoy!
 
@@ -99,11 +116,10 @@ App started
 
 ### Testing:
 
-- Run the test cases locally with
+- Run the test cases from within your local repository
 ```
-git submodule init
-git submodule update
-swift test
+$ git clone https://github.com/IBM-Swift/todolist-tests Tests
+$ swift test
 ```
 
 - Alternatively, checkout the specs on [TodoList-Backend](http://www.todobackend.com/specs/index.html?http://localhost:8090) and set the appropriate url to test
