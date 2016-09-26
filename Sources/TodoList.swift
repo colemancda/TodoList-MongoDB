@@ -67,7 +67,7 @@ public class TodoList: TodoListAPI {
         username: String = defaultUsername, password: String = defaultPassword) {
 
          do {
-             server = try Server("mongodb://\(host):\(port)", automatically: true)
+             server = try Server("mongodb://\(username):\(password)@\(host):\(port)", automatically: true)
 
          } catch {
              Log.info("MongoDB is not available on the given host: \(host) and port: \(port)")
