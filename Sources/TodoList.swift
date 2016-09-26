@@ -44,42 +44,36 @@ public class TodoList: TodoListAPI {
     // Find database if it is already running
     public init(_ dbConfiguration: DatabaseConfiguration) {
 
+        var authorization: (username: String, password: String, against: String)? = nil
         guard let host = dbConfiguration.host,
               let port = dbConfiguration.port else {
 
                     Log.info("Host and port were not provided")
                     exit(1)
         }
-
-        var authorization: (username: String, password: String, against: String)? = nil
-
-        if let username = dbConfiguration.username,
-           let password = dbConfiguration.password {
-                   authorization = (username: username, password: password, against: "admin")
-               }
+        if let username = dbConfiguration.username, let password = dbConfiguration.password {
+               authorization = (username: username, password: password, against: "admin")
+        }
 
         do {
-            server = try Server(at: host, port: port, using: authorization, automatically: false)
-
+            server = try Server(at: host, port: port, using: authorization, automatically: true)
         } catch {
             Log.info("MongoDB is not available on host: \(host) and port: \(port)")
             exit(1)
-
         }
     }
 
-    public init(database: String = TodoList.defaultDatabaseName, host: String = TodoList.defaultMongoHost,
-                 port: UInt16 = TodoList.defaultMongoPort,
-                 username: String = defaultUsername, password: String = defaultPassword) {
+    public init(database: String = TodoList.defaultDatabaseName, host: String = TodoList.defaultMongoHost, port: UInt16 = TodoList.defaultMongoPort,
+        username: String = defaultUsername, password: String = defaultPassword) {
 
-                 do {
-                     server = try Server("mongodb://\(username):\(password)@\(host):\(port)", automatically: false)
+         do {
+             server = try Server("mongodb://\(host):\(port)", automatically: true)
 
-                 } catch {
-                     Log.info("MongoDB is not available on the given host: \(host) and port: \(port)")
-                     exit(1)
+         } catch {
+             Log.info("MongoDB is not available on the given host: \(host) and port: \(port)")
+             exit(1)
 
-                 }
+         }
      }
 
     public func count(withUserID: String?, oncompletion: @escaping (Int?, Error?) -> Void) {
